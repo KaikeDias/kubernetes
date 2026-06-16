@@ -1,15 +1,42 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
-
-	http.HandleFunc("/", Hello) 
+	http.HandleFunc("/secret", Secret)
+	http.HandleFunc("/configmap", ConfigMap)
+	http.HandleFunc("/", Hello)
 	http.ListenAndServe(":8080", nil)
 }
 
 func Hello(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("<h1>Hello Full Cycle!!!</h1>"))
+	name := os.Getenv("NAME")
+	age := os.Getenv("AGE")
+
+	fmt.Fprintf(w, "Name: %s, Age: %s\n", name, age)
+}
+
+func ConfigMap(w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadFile("myfamily/family.txt")
+
+	if err != nil {
+		log.Printf("Error reading file: %v", err)
+		http.Error(w, "Error reading configmap file", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "My family: %s\n", string(data))
+}
+
+func Secret(w http.ResponseWriter, r *http.Request) {
+	user := os.Getenv("USER")
+	password := os.Getenv("PASSWORD")
+
+	fmt.Fprintf(w, "User: %s, Password: %s\n", user, password)
 }
