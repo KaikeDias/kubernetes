@@ -6,12 +6,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
+var startedAt = time.Now()
+
 func main() {
+	http.HandleFunc("/healthz", Healthz)
 	http.HandleFunc("/secret", Secret)
 	http.HandleFunc("/configmap", ConfigMap)
 	http.HandleFunc("/", Hello)
+
+	log.Println("Server running on port 8080")
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -20,6 +26,19 @@ func Hello(w http.ResponseWriter, r *http.Request) {
 	age := os.Getenv("AGE")
 
 	fmt.Fprintf(w, "Name: %s, Age: %s\n", name, age)
+}
+
+func Healthz(w http.ResponseWriter, r *http.Request) {
+	duration := time.Since(startedAt)
+
+	if duration.Seconds() < 10 {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Duration: %v", duration.Seconds())))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
 }
 
 func ConfigMap(w http.ResponseWriter, r *http.Request) {
