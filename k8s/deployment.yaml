@@ -16,7 +16,32 @@ spec:
     spec:
       containers:
         - name: goserver
-          image: kaike998/hello-go:v6
+          image: kaike998/hello-go:v6.2
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 3
+            failureThreshold: 10
+          
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 1
+            timeoutSeconds: 1
+            successThreshold: 1
+            initialDelaySeconds: 10
+          
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 3
+            failureThreshold: 1
+            initialDelaySeconds: 10
+
           envFrom:
             - configMapRef:
                 name: goserver-env
